@@ -6,7 +6,11 @@ if(process.env.NODE_ENV !== "production"){
 
 const express = require('express');
 const path = require('path');
+const connectDB = require('./db');
 const mongoose = require('mongoose');
+
+/* Database Connection */
+connectDB();
 
 /* PACKAGES IMPORT END */
 
