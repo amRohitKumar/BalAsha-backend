@@ -7,6 +7,19 @@ const OperatorSchema = new Schema({
     unique: true,
     required: true,
   },
+  phone_number: {
+    type: String,
+    unique: true,
+    required: true,
+  },
+  address: {
+    type: String,
+    required: true,
+  },
+  is_verified: {
+    type: Boolean,
+    default: false,
+  },
   password: {
     type: String,
     required: true,
@@ -17,7 +30,7 @@ const OperatorSchema = new Schema({
   },
   role: {
     type: String,
-    enum: ["SOCIAL_WORKER", "MANAGER", "OPERATIONAL_MANAGER"],
+    enum: ["SOCIAL_WORKER", "MANAGER", "OPERATIONAL_MANAGER", "ADMIN"],
     default: "SOCIAL_WORKER",
     required: true,
   },

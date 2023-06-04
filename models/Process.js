@@ -10,15 +10,6 @@ const ProcessSchema = new Schema({
         type: String,
         required: true,
     },
-    sub_steps: [{
-        name: String,
-        description: String,
-        cateogry: {
-            type: String,
-            enum: ['FILE', 'INPUT', 'CHECKBOX'],
-            default: 'CHECKBOX',
-        }
-    }],
     default_duration: {
         type: Number,
         default: 30,

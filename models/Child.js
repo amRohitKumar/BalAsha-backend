@@ -2,6 +2,39 @@ const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
 const ChildSchema = new Schema({
+  name: String,
+  dob: Date,
+  state: String,
+  district: String,
+  shelter_home: String,
+  case_number: {
+    type: String,
+    unique: true,
+    required: true,
+  },
+  gender: {
+    type: String,
+    enum: ['MALE', 'FEMALE'],
+    required: true,
+  },
+  category: {
+    type: String,
+    enum: ['ABANDONED', 'ORPHAN', 'SURRENDERED'],
+    required: true,
+  },
+  admission_reason: String,
+  flagging_reason: String,
+  guardian: String,
+  home_stay: {
+    year: Number,
+    month: {
+      type: Number,
+      min: 0,
+      max: 11
+    }
+  },
+  cwc_last_review: Date,
+  case_history: String,
   orphanage: {
     type: Schema.Types.ObjectId,
     ref: "Orphanage",
@@ -17,9 +50,10 @@ const ChildSchema = new Schema({
         ref: "Process",
       },
       is_completed: {
-        type: Bool,
+        type: Boolean,
         default: false,
       },
+      url: String,
       response: String,
       start_date: Date,
       end_time: Date,
