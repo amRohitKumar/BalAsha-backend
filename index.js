@@ -9,7 +9,7 @@ const path = require('path');
 const connectDB = require('./db');
 const mongoose = require('mongoose');
 
-/* Database Connection */
+/* DATABASE CONNECTION */
 connectDB();
 
 /* PACKAGES IMPORT END */
