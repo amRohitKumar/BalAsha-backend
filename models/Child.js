@@ -59,6 +59,10 @@ const ChildSchema = new Schema({
       end_time: Date,
     },
   ],
+  is_done: {
+    type: Boolean,
+    default: false,
+  },
   documents: [
     {
       url: String,

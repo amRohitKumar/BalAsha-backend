@@ -19,7 +19,15 @@ const app = express();
 
 /* ROUTES IMPORT */
 
+const authRoutes = require('./routes/Auth');
+const childRoutes = require('./routes/Child');
+
 /* ROUTES IMPORT END */
+
+
+/* SETTING UP ROUTES */
+app.use('/auth', authRoutes);
+app.use('/child', childRoutes);
 
 
 const PORT = process.env.PORT || 8080;
