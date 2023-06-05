@@ -2,27 +2,28 @@ if(process.env.NODE_ENV !== "production"){
     require('dotenv').config();
 }
 
-/* PACKAGES IMPORT */
-
 const express = require('express');
+const app = express();
 const path = require('path');
+const cors = require("cors");
 const connectDB = require('./db');
-const mongoose = require('mongoose');
+const passport = require("passport");
+
 
 /* DATABASE CONNECTION */
 connectDB();
 
-/* PACKAGES IMPORT END */
-
-const app = express();
+/* CONFIGURATION */
+app.use(express.json());
+app.use(express.urlencoded({extended: true}));
+app.use(cors());
+app.use(passport.initialize());
+require("./passport");
 
 
 /* ROUTES IMPORT */
-
 const authRoutes = require('./routes/Auth');
 const childRoutes = require('./routes/Child');
-
-/* ROUTES IMPORT END */
 
 
 /* SETTING UP ROUTES */

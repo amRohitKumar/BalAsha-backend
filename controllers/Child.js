@@ -3,7 +3,7 @@ const Child = require("../models/Child");
 
 const getAllChild = async (req, res) => {
   const filter_string = req.query.status | "";
-  const allChilds = [];
+  let allChilds = [];
   if (filter_string === "complete") {
     allChilds = await Child.find({ is_done: true });
   } else if (filter_string === "process") {
@@ -17,7 +17,7 @@ const getAllChild = async (req, res) => {
 const getAssignedChild = async (req, res) => {
   const operatorId = req.params.id;
   const filter_string = req.query.status | "";
-  const allChilds = [];
+  let allChilds = [];
   if (filter_string === "complete") {
     allChilds = await Child.find({ is_done: true, operator_assigned: operatorId });
   } else if (filter_string === "process") {
