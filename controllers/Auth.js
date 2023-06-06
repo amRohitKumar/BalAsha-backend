@@ -3,6 +3,9 @@ const { hashSync, compareSync } = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const Operator = require("../models/Operator");
 
+/**
+ * @info operator sinup function
+ */
 const registerOperator = async (req, res) => {
   const { username, phone_number, address, password, name, role } = req.body;
   const resp = await Operator.find({ $or: [{ username }, { phone_number }] });
@@ -47,6 +50,9 @@ const registerOperator = async (req, res) => {
   });
 };
 
+/**
+ * @info operator signin function
+ */
 const loginOperator = async (req, res) => {
   const { username, password } = req.body;
   const resp = await Operator.findOne({ username });

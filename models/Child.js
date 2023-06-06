@@ -3,15 +3,14 @@ const Schema = mongoose.Schema;
 
 const ChildSchema = new Schema({
   name: String,
+  image_url: String,
   dob: Date,
-  state: String,
-  district: String,
   shelter_home: String,
-  case_number: {
-    type: String,
-    unique: true,
-    required: true,
-  },
+  // case_number: {
+  //   type: String,
+  //   unique: true,
+  //   required: true,
+  // },
   gender: {
     type: String,
     enum: ['MALE', 'FEMALE'],
@@ -23,8 +22,9 @@ const ChildSchema = new Schema({
     required: true,
   },
   admission_reason: String,
-  flagging_reason: String,
+  // flagging_reason: String,
   guardian: String,
+  last_visit: String,
   home_stay: {
     year: Number,
     month: {
@@ -33,7 +33,7 @@ const ChildSchema = new Schema({
       max: 11
     }
   },
-  cwc_last_review: Date,
+  // cwc_last_review: Date,
   case_history: String,
   orphanage: {
     type: Schema.Types.ObjectId,
@@ -45,37 +45,57 @@ const ChildSchema = new Schema({
   },
   process: [
     {
-      _process: {
-        type: Schema.Types.ObjectId,
-        ref: "Process",
-      },
-      is_completed: {
-        type: Boolean,
-        default: false,
-      },
-      url: String,
-      response: String,
-      start_date: Date,
-      end_time: Date,
+      name: String,
+      process_list: [{
+        _process: {
+          type: Schema.Types.ObjectId,
+          ref: "Process",
+        },
+        url: String,
+        response: String,
+        start_date: {
+          type: Date,
+          default: Date.now(),
+        },
+        end_date: Date,
+        is_completed: {
+          type: Boolean,
+          default: false,
+        },
+      }],
     },
   ],
   is_done: {
     type: Boolean,
     default: false,
   },
-  documents: [
-    {
-      url: String,
-      name: {
-        type: String,
-        enum: ["POLICE_REPORT", "HEALTH_DOCUMENT"], // add different types of documents
-        required: true,
-      },
-    },
-  ],
+  ffa_document: {
+    url: String,
+    time: Date,
+  },
+  csr_document: {
+    url: String,
+    time: Date,
+  },
+  mer_document: {
+    url: String,
+    time: Date,
+  },
+  previous_org_document: {
+    url: String,
+    time: Date,
+  },
+  dcpo_document: {
+    url: String,
+    time: Date,
+  },
+  caring_document: {
+    url: String,
+    time: Date,
+  },
   entry_date: {
     type: Date,
-    required: true,
+    default: Date.now(),
   },
 });
 

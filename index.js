@@ -24,11 +24,13 @@ require("./passport");
 /* ROUTES IMPORT */
 const authRoutes = require('./routes/Auth');
 const childRoutes = require('./routes/Child');
+const operatorRoutes = require("./routes/Operator");
 
 
 /* SETTING UP ROUTES */
 app.use('/auth', authRoutes);
 app.use('/child', childRoutes);
+app.use('/operator', operatorRoutes);
 
 
 const PORT = process.env.PORT || 8080;
