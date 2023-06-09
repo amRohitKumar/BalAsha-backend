@@ -7,7 +7,7 @@ const Child = require("../models/Child");
  */
 const socialWorkerList = async (req, res) => {
   const resp = await Operator.find({ role: "SOCIAL_WORKER" }).select(
-    "_id, username, name"
+    "_id , name , email"
   );
   return res.status(StatusCodes.OK).send({ data: resp });
 };
@@ -18,11 +18,13 @@ const socialWorkerList = async (req, res) => {
 const updateChildField = async (req, res) => {
   const { childId, processId, stepId } = req.params;
   const { url, response } = req.body;
-  const reqChild = await Child.findById(childId);
+  const reqChild = await Child.findById(childId)
+    .populate({ path: "process.process_list._process" })
+    .select("process");
   if (!reqChild) {
     return res.send(StatusCodes.NOT_FOUND).send({ msg: "Child not found !" });
   }
-
+  let newDoc = {};
   for (let idx1 = 0; idx1 < reqChild.process.length; idx1++) {
     if (reqChild.process[idx1]._id == processId) {
       for (
@@ -34,14 +36,13 @@ const updateChildField = async (req, res) => {
           reqChild.process[idx1].process_list[idx2].url = url;
           reqChild.process[idx1].process_list[idx2].response = response;
           reqChild.process[idx1].process_list[idx2].is_completed = true;
-          await reqChild.save();
+          newDoc = await reqChild.save();
           break;
         }
       }
     }
   }
-
-  res.status(StatusCodes.OK).send({ msg: "Updated successfully !" });
+  res.status(StatusCodes.OK).send({ data: newDoc });
 };
 
 /**
@@ -50,11 +51,14 @@ const updateChildField = async (req, res) => {
 const updateProcessDeadline = async (req, res) => {
   const { childId, processId, stepId } = req.params;
   const { start_date, end_date } = req.body;
-  const reqChild = await Child.findById(childId);
+  const reqChild = await Child.findById(childId)
+    .populate({ path: "process.process_list._process" })
+    .select("process");
   if (!reqChild) {
     return res.send(StatusCodes.NOT_FOUND).send({ msg: "Child not found !" });
   }
 
+  let newDoc = {};
   for (let idx1 = 0; idx1 < reqChild.process.length; idx1++) {
     if (reqChild.process[idx1]._id == processId) {
       for (
@@ -65,14 +69,32 @@ const updateProcessDeadline = async (req, res) => {
         if (reqChild.process[idx1].process_list[idx2]._id == stepId) {
           reqChild.process[idx1].process_list[idx2].start_date = start_date;
           reqChild.process[idx1].process_list[idx2].end_date = end_date;
-          await reqChild.save();
+          newDoc = await reqChild.save();
           break;
         }
       }
     }
   }
 
-  res.status(StatusCodes.OK).send({ msg: "Updated successfully !" });
+  res.status(StatusCodes.OK).send({ data: newDoc });
 };
 
-module.exports = { socialWorkerList, updateChildField, updateProcessDeadline };
+const markDone = async (req, res) => {
+  const { childId } = req.params;
+  const resp = await Child.findById(childId);
+  if (!resp) {
+    return res.status(StatusCodes.NOT_FOUND).send({ msg: "Child not found !" });
+  }
+  resp.is_done = true;
+  await resp.save();
+  return res
+    .status(StatusCodes.OK)
+    .send({ msg: "Child marked successfully !" });
+};
+
+module.exports = {
+  socialWorkerList,
+  updateChildField,
+  updateProcessDeadline,
+  markDone,
+};

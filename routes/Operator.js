@@ -6,6 +6,7 @@ const {
   socialWorkerList,
   updateChildField,
   updateProcessDeadline,
+  markDone,
 } = require("../controllers/Operator");
 
 router
@@ -13,11 +14,18 @@ router
   .get(passport.authenticate("jwt", { session: false }), socialWorkerList);
 
 router
+  .route("/final/:childId")
+  .get(passport.authenticate("jwt", { session: false }), markDone);
+
+router
   .route("/update/:childId/:processId/:stepId")
   .patch(passport.authenticate("jwt", { session: false }), updateChildField);
 
 router
   .route("/updatetime/:childId/:processId/:stepId")
-  .patch(passport.authenticate("jwt", { session: false }), updateProcessDeadline);
+  .patch(
+    passport.authenticate("jwt", { session: false }),
+    updateProcessDeadline
+  );
 
 module.exports = router;

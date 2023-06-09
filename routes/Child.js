@@ -6,7 +6,9 @@ const {
   getAllChild,
   getAssignedChild,
   getChildDetails,
-  createChild
+  createChild,
+  getCompleteChildDetails,
+  generateChildCSV
 } = require("../controllers/Child");
 
 router
@@ -19,7 +21,15 @@ router
 
 router
   .route("/add")
-  .post(passport.authenticate("jwt", {session: false}), createChild)
+  .post(passport.authenticate("jwt", { session: false }), createChild);
+
+router
+  .route("/complete/:id")
+  .get(passport.authenticate("jwt", { session: false }), getCompleteChildDetails);
+
+router
+  .route("/getcsv")
+  .get(passport.authenticate("jwt", {session: false}), generateChildCSV);
 
 router
   .route("/:id")

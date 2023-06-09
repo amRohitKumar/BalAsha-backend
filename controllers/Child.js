@@ -1,20 +1,63 @@
 const { StatusCodes } = require("http-status-codes");
 const Child = require("../models/Child");
 const Process = require("../models/Process");
+const Orphanage = require("../models/Orphanage");
+const fastCsv = require("fast-csv");
 
 /**
  * @returns list of child based on current status
  */
 const getAllChild = async (req, res) => {
-  const filter_string = req.query.status | "";
+  const filter_string = req.query.status;
   let allChilds = [];
   if (filter_string === "complete") {
-    allChilds = await Child.find({ is_done: true });
+    allChilds = await Child.find({ is_done: true })
+      .populate({
+        path: "process.process_list._process",
+        select: "name",
+      })
+      .select(
+        "_id , gender , name , category , process.process_list.is_completed"
+      );
   } else if (filter_string === "process") {
-    allChilds = await Child.find({ is_done: false });
+    allChilds = await Child.find({ is_done: false })
+      .populate({
+        path: "process.process_list._process",
+        select: "name",
+      })
+      .select(
+        "_id , gender , name , category , process.process_list.is_completed"
+      );
   } else {
-    allChilds = await Child.find({});
+    allChilds = await Child.find({})
+      .populate({
+        path: "process.process_list._process",
+        select: "name",
+      })
+      .select(
+        "_id , gender , name , category , process.process_list.is_completed"
+      );
   }
+  allChilds = allChilds.map((doc) => {
+    let nextStep = "COMPLETED";
+
+    for (let subDoc of doc.process) {
+      for (let pp of subDoc.process_list) {
+        if (!pp.is_completed) {
+          nextStep = pp._process.name;
+          break;
+        }
+      }
+      if (nextStep) break;
+    }
+    return {
+      next_step: nextStep,
+      name: doc.name,
+      gender: doc.gender,
+      category: doc.category,
+      _id: doc._id,
+    };
+  });
   return res.status(StatusCodes.OK).send({ data: allChilds });
 };
 
@@ -23,7 +66,7 @@ const getAllChild = async (req, res) => {
  */
 const getAssignedChild = async (req, res) => {
   const operatorId = req.params.id;
-  const filter_string = req.query.status | "";
+  const filter_string = req.query.status;
   let allChilds = [];
   if (filter_string === "complete") {
     allChilds = await Child.find({
@@ -34,6 +77,34 @@ const getAssignedChild = async (req, res) => {
     allChilds = await Child.find({
       is_done: false,
       operator_assigned: operatorId,
+    })
+      .populate({
+        path: "process.process_list._process",
+        select: "name",
+      })
+      .select(
+        "_id , gender , name , category , process.process_list.is_completed"
+      );
+
+    allChilds = allChilds.map((doc) => {
+      let nextStep = "COMPLETED";
+
+      for (let subDoc of doc.process) {
+        for (let pp of subDoc.process_list) {
+          if (!pp.is_completed) {
+            nextStep = pp._process.name;
+            break;
+          }
+        }
+        if (nextStep) break;
+      }
+      return {
+        next_step: nextStep,
+        name: doc.name,
+        gender: doc.gender,
+        category: doc.category,
+        _id: doc._id,
+      };
     });
   } else {
     allChilds = await Child.find({ operator_assigned: operatorId });
@@ -45,24 +116,89 @@ const getAssignedChild = async (req, res) => {
  * @returns info about a particular child
  */
 const getChildDetails = async (req, res) => {
-  const childId = req.query.id;
-  const reqChild = await Child.findById(childId);
+  const childId = req.params.id;
+  const reqChild = await Child.findById(childId)
+    .populate({ path: "process.process_list._process" })
+    .select("process");
   if (!reqChild) {
     return res.status(StatusCodes.NOT_FOUND).send({ msg: "Child not found !" });
   }
   const resp = {
-    category: reqChild.category,
+    // category: reqChild.category,
     process: reqChild.process,
-    parent_investigation_completed: reqChild.is_done,
-    is_adopted: reqChild.is_adopted,
-    ffa_document: reqChild.ffa_document,
-    csr_document: reqChild.csr_document,
-    mer_document: reqChild.mer_document,
-    previous_org_document: reqChild.previous_org_document,
-    dcpo_document: reqChild.dcpo_document,
-    caring_document: reqChild.caring_document,
+    // parent_investigation_completed: reqChild.is_done,
+    // is_adopted: reqChild.is_adopted,
+    // ffa_document: reqChild.ffa_document,
+    // csr_document: reqChild.csr_document,
+    // mer_document: reqChild.mer_document,
+    // previous_org_document: reqChild.previous_org_document,
+    // dcpo_document: reqChild.dcpo_document,
+    // caring_document: reqChild.caring_document,
   };
-  return req.send(StatusCodes.OK).send({ data: resp });
+  return res.status(StatusCodes.OK).send({ data: resp });
+};
+
+const transformer = (doc) => {
+  return {
+    Id: doc._id,
+    Name: doc.name,
+    DOB: doc.dob,
+    "Shelter Home": doc.shelter_home,
+    Gender: doc.gender,
+    Category: doc.category,
+    "Admission Reason": doc.admission_reason,
+    Guardian: doc.guardian,
+    "Last visit": doc.last_visit,
+    "Home Stay (month)": doc.home_stay.month,
+    "Home Stay (year)": doc.home_stay.year,
+    "Case History": doc.case_history,
+    "Case completed": doc.is_done,
+    "Entry in system": doc.entry_date,
+  };
+};
+
+const generateChildCSV = async (req, res) => {
+  const { filter } = req.query;
+  let cursor;
+  if (filter === "complete") {
+    cursor = Child.find({ is_done: true }).cursor();
+  } else if (filter === "process") {
+    cursor = Child.find({ is_done: false }).cursor();
+  } else {
+    cursor = Child.find({}).cursor();
+  }
+
+  const filename = 'BalAshaExport.csv';
+  
+  res.setHeader('Content-disposition', `attachment; filename=${filename}`);
+  res.writeHead(200, { 'Content-Type': 'text/csv' });
+
+  res.flushHeaders();
+
+  const csvStream = fastCsv.format({headers: true}).transform(transformer)
+  cursor.pipe(csvStream).pipe(res);
+};
+
+const getCompleteChildDetails = async (req, res) => {
+  const childId = req.params.id;
+  const reqChild = await Child.findById(childId).populate([
+    { path: "process.process_list._process" },
+    { path: "orphanage" },
+    { path: "operator_assigned", select: "name" },
+  ]);
+  if (!reqChild) {
+    return res.status(StatusCodes.NOT_FOUND).send({ msg: "Child not found !" });
+  }
+  // get all the files
+  const fileLinks = [];
+  reqChild.process.forEach((doc) => {
+    doc.process_list.forEach((subDoc) => {
+      if (subDoc.url)
+        fileLinks.push({ name: subDoc._process.name, url: subDoc.url });
+    });
+  });
+
+  return res.status(StatusCodes.OK).send({ data: reqChild, links: fileLinks });
 };
 
 /**
@@ -73,15 +209,18 @@ const createChild = async (req, res) => {
     name,
     image_url,
     dob,
-    place,
+    orphanage_name,
+    city,
+    state,
+    pin,
+    orphanage_contact,
     shelter_home,
     gender,
     category,
     admission_reason,
     last_visit,
     guardian,
-    year,
-    month,
+    home_stay,
     case_history,
     operator_assigned,
   } = req.body;
@@ -107,22 +246,22 @@ const createChild = async (req, res) => {
           {
             _process: policeProcess,
             end_date:
-              Date.now() + policeProcess.default_duration * 24 * 60 * 60,
+              Date.now() + policeProcess.default_duration * 24 * 60 * 60 * 1000,
           },
           {
             _process: TVPubProcess,
             end_date:
-              Date.now() + policeProcess.default_duration * 24 * 60 * 60,
+              Date.now() + policeProcess.default_duration * 24 * 60 * 60 * 1000,
           },
           {
             _process: newspaperPubProcess,
             end_date:
-              Date.now() + policeProcess.default_duration * 24 * 60 * 60,
+              Date.now() + policeProcess.default_duration * 24 * 60 * 60 * 1000,
           },
           {
             _process: socialProcess,
             end_date:
-              Date.now() + policeProcess.default_duration * 24 * 60 * 60,
+              Date.now() + policeProcess.default_duration * 24 * 60 * 60 * 1000,
           },
         ],
       },
@@ -132,7 +271,8 @@ const createChild = async (req, res) => {
           {
             _process: dcpuProcess,
             end_date:
-              Date.now() + dcpuProcess.default_duration * 2 * 24 * 60 * 60,
+              Date.now() +
+              dcpuProcess.default_duration * 2 * 24 * 60 * 60 * 1000,
           },
         ],
       },
@@ -142,7 +282,8 @@ const createChild = async (req, res) => {
           {
             _process: cwcProcess,
             end_date:
-              Date.now() + dcpuProcess.default_duration * 2 * 24 * 60 * 60,
+              Date.now() +
+              dcpuProcess.default_duration * 2 * 24 * 60 * 60 * 1000,
           },
         ],
       },
@@ -152,12 +293,14 @@ const createChild = async (req, res) => {
           {
             _process: medicalProcess,
             end_date:
-              Date.now() + dcpuProcess.default_duration * 2 * 24 * 60 * 60,
+              Date.now() +
+              dcpuProcess.default_duration * 2 * 24 * 60 * 60 * 1000,
           },
           {
             _process: caringProcess,
             end_date:
-              Date.now() + dcpuProcess.default_duration * 2 * 24 * 60 * 60,
+              Date.now() +
+              dcpuProcess.default_duration * 2 * 24 * 60 * 60 * 1000,
           },
         ],
       },
@@ -202,6 +345,21 @@ const createChild = async (req, res) => {
     ];
   }
 
+  let reqOrphanage = await Orphanage.findOne({
+    name: orphanage_name,
+    address: { city, state, pin },
+    contact_number: orphanage_contact,
+  });
+
+  if (!reqOrphanage) {
+    reqOrphanage = new Orphanage({
+      name,
+      address: { city, state, pin },
+      orphanage_contact,
+    });
+    reqOrphanage = await reqOrphanage.save();
+  }
+
   const newChild = new Child({
     name,
     image_url,
@@ -212,10 +370,11 @@ const createChild = async (req, res) => {
     admission_reason,
     guardian,
     last_visit,
-    home_stay: { year, month },
+    home_stay,
     case_history,
     operator_assigned,
     process,
+    orphanage: reqOrphanage._id,
   });
 
   await newChild.save();
@@ -228,4 +387,6 @@ module.exports = {
   getAssignedChild,
   getChildDetails,
   createChild,
+  getCompleteChildDetails,
+  generateChildCSV,
 };

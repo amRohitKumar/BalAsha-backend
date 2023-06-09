@@ -6,23 +6,17 @@ const ChildSchema = new Schema({
   image_url: String,
   dob: Date,
   shelter_home: String,
-  // case_number: {
-  //   type: String,
-  //   unique: true,
-  //   required: true,
-  // },
   gender: {
     type: String,
-    enum: ['MALE', 'FEMALE'],
+    enum: ["MALE", "FEMALE", "OTHER"],
     required: true,
   },
   category: {
     type: String,
-    enum: ['ABANDONED', 'ORPHAN', 'SURRENDERED'],
+    enum: ["ABANDONED", "ORPHAN", "SURRENDERED"],
     required: true,
   },
   admission_reason: String,
-  // flagging_reason: String,
   guardian: String,
   last_visit: String,
   home_stay: {
@@ -30,10 +24,9 @@ const ChildSchema = new Schema({
     month: {
       type: Number,
       min: 0,
-      max: 11
-    }
+      max: 11,
+    },
   },
-  // cwc_last_review: Date,
   case_history: String,
   orphanage: {
     type: Schema.Types.ObjectId,
@@ -46,56 +39,34 @@ const ChildSchema = new Schema({
   process: [
     {
       name: String,
-      process_list: [{
-        _process: {
-          type: Schema.Types.ObjectId,
-          ref: "Process",
+      process_list: [
+        {
+          _process: {
+            type: Schema.Types.ObjectId,
+            ref: "Process",
+          },
+          url: String,
+          response: String,
+          start_date: {
+            type: Date,
+            default: Date.now,
+          },
+          end_date: Date,
+          is_completed: {
+            type: Boolean,
+            default: false,
+          },
         },
-        url: String,
-        response: String,
-        start_date: {
-          type: Date,
-          default: Date.now(),
-        },
-        end_date: Date,
-        is_completed: {
-          type: Boolean,
-          default: false,
-        },
-      }],
+      ],
     },
   ],
   is_done: {
     type: Boolean,
     default: false,
   },
-  ffa_document: {
-    url: String,
-    time: Date,
-  },
-  csr_document: {
-    url: String,
-    time: Date,
-  },
-  mer_document: {
-    url: String,
-    time: Date,
-  },
-  previous_org_document: {
-    url: String,
-    time: Date,
-  },
-  dcpo_document: {
-    url: String,
-    time: Date,
-  },
-  caring_document: {
-    url: String,
-    time: Date,
-  },
   entry_date: {
     type: Date,
-    default: Date.now(),
+    default: Date.now,
   },
 });
 

@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
 const OperatorSchema = new Schema({
-  username: {
+  email: {
     type: String,
     unique: true,
     required: true,
