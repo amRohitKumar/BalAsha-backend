@@ -92,9 +92,72 @@ const markDone = async (req, res) => {
     .send({ msg: "Child marked successfully !" });
 };
 
+const getStats = async (req, res) => {
+  let completeNumber = await Child.count({});
+  const incompleteCase = await Child.find({ is_done: false });
+  let incompleteCasesNumber = incompleteCase.length;
+  completeNumber = completeNumber - incompleteCasesNumber;
+  let grp1 = [0, 0, 0, 0],
+    grp2 = [0, 0, 0, 0, 0, 0, 0, 0];
+  incompleteCase.forEach((child) => {
+    let ptr = 0;
+    for (let idx2 = 0; idx2 < child.process.length; idx2++) {
+      doc = child.process[idx2];
+      let flag = false;
+      for (let idx = 0; idx < doc.process_list.length; idx++) {
+        if (doc.process_list[idx].is_completed === false) {
+          grp2[ptr] += 1;
+          grp1[idx2] += 1;
+          flag = true;
+          break;
+        }
+        ptr++;
+      }
+      if (flag) break;
+    }
+  });
+  // console.log(grp1, grp2);
+  let name1 = ["DATA COLLECTION", "DCPU", "CWC", "CARINGS"],
+    name2 = [
+      "Police Report",
+      "TV telecasting",
+      "Newspaper Publication",
+      "Social Report",
+      "DCPU",
+      "LFA",
+      "MEDICAL",
+      "CARINGS",
+    ];
+  grp1 = grp1.map((val, idx) => {
+    return { value: val, name: name1[idx] };
+  });
+  grp2 = grp2.map((val, idx) => {
+    return { value: val, name: name2[idx] };
+  });
+
+  let categoryStats = await Child.aggregate([
+    {
+      $group: {
+        _id: "$category",
+        count: { $sum: 1 },
+      },
+    },
+  ]);
+
+  res
+    .status(StatusCodes.OK)
+    .send({
+      data1: grp2,
+      data2: categoryStats,
+      completeNumber,
+      incompleteCasesNumber,
+    });
+};
+
 module.exports = {
   socialWorkerList,
   updateChildField,
   updateProcessDeadline,
   markDone,
+  getStats,
 };

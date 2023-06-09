@@ -7,11 +7,16 @@ const {
   updateChildField,
   updateProcessDeadline,
   markDone,
+  getStats,
 } = require("../controllers/Operator");
 
 router
   .route("/swlist")
   .get(passport.authenticate("jwt", { session: false }), socialWorkerList);
+
+router
+  .route("/getstats")
+  .get(passport.authenticate("jwt", { session: false}), getStats);
 
 router
   .route("/final/:childId")
