@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 const Process = require("./models/Process");
 
-const DB_URL = process.env.MONGO_URI || "mongodb://localhost:27017/BalAsha";
+const DB_URL = process.env.DB_URL || "mongodb://localhost:27017/BalAsha";
 
 const connectDB = async () => {
   try {
