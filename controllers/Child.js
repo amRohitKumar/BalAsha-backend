@@ -17,8 +17,7 @@ const getAllChild = async (req, res) => {
         select: "name",
       })
       .select(
-        "_id , gender , name , category , process.process_list.is_completed",
-        "is_done"
+        "_id , gender , name , category , process.process_list.is_completed , is_done"
       );
   } else if (filter_string === "process") {
     allChilds = await Child.find({ is_done: false })
@@ -27,8 +26,7 @@ const getAllChild = async (req, res) => {
         select: "name",
       })
       .select(
-        "_id , gender , name , category , process.process_list.is_completed",
-        "is_done"
+        "_id , gender , name , category , process.process_list.is_completed , is_done"
       );
   } else {
     allChilds = await Child.find({})
@@ -37,8 +35,7 @@ const getAllChild = async (req, res) => {
         select: "name",
       })
       .select(
-        "_id , gender , name , category , process.process_list.is_completed",
-        "is_done"
+        "_id , gender , name , category , process.process_list.is_completed , is_done"
       );
   }
   allChilds = allChilds.map((doc) => {
