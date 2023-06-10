@@ -17,7 +17,8 @@ const getAllChild = async (req, res) => {
         select: "name",
       })
       .select(
-        "_id , gender , name , category , process.process_list.is_completed"
+        "_id , gender , name , category , process.process_list.is_completed",
+        "is_done"
       );
   } else if (filter_string === "process") {
     allChilds = await Child.find({ is_done: false })
@@ -26,7 +27,8 @@ const getAllChild = async (req, res) => {
         select: "name",
       })
       .select(
-        "_id , gender , name , category , process.process_list.is_completed"
+        "_id , gender , name , category , process.process_list.is_completed",
+        "is_done"
       );
   } else {
     allChilds = await Child.find({})
@@ -35,21 +37,26 @@ const getAllChild = async (req, res) => {
         select: "name",
       })
       .select(
-        "_id , gender , name , category , process.process_list.is_completed"
+        "_id , gender , name , category , process.process_list.is_completed",
+        "is_done"
       );
   }
   allChilds = allChilds.map((doc) => {
     let nextStep = "-1";
-
-    for (let subDoc of doc.process) {
-      for (let pp of subDoc.process_list) {
-        if (!pp.is_completed) {
-          nextStep = pp._process.name;
-          break;
+    if (doc.is_done) {
+      nextStep = "COMPLETED";
+    } else {
+      for (let subDoc of doc.process) {
+        for (let pp of subDoc.process_list) {
+          if (!pp.is_completed) {
+            nextStep = pp._process.name;
+            break;
+          }
         }
+        if (nextStep !== "-1") break;
       }
-      if (nextStep !== "-1") break;
     }
+
     return {
       next_step: nextStep,
       name: doc.name,
@@ -168,14 +175,14 @@ const generateChildCSV = async (req, res) => {
     cursor = Child.find({}).cursor();
   }
 
-  const filename = 'BalAshaExport.csv';
-  
-  res.setHeader('Content-disposition', `attachment; filename=${filename}`);
-  res.writeHead(200, { 'Content-Type': 'text/csv' });
+  const filename = "BalAshaExport.csv";
+
+  res.setHeader("Content-disposition", `attachment; filename=${filename}`);
+  res.writeHead(200, { "Content-Type": "text/csv" });
 
   res.flushHeaders();
 
-  const csvStream = fastCsv.format({headers: true}).transform(transformer)
+  const csvStream = fastCsv.format({ headers: true }).transform(transformer);
   cursor.pipe(csvStream).pipe(res);
 };
 
