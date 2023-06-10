@@ -17,7 +17,8 @@ const socialWorkerList = async (req, res) => {
  */
 const updateChildField = async (req, res) => {
   const { childId, processId, stepId } = req.params;
-  const { url, response } = req.body;
+  const { response } = req.body;
+  console.log(response);
   const reqChild = await Child.findById(childId)
     .populate({ path: "process.process_list._process" })
     .select("process");
@@ -33,7 +34,7 @@ const updateChildField = async (req, res) => {
         idx2++
       ) {
         if (reqChild.process[idx1].process_list[idx2]._id == stepId) {
-          reqChild.process[idx1].process_list[idx2].url = url;
+          reqChild.process[idx1].process_list[idx2].url = req.file.path;
           reqChild.process[idx1].process_list[idx2].response = response;
           reqChild.process[idx1].process_list[idx2].is_completed = true;
           newDoc = await reqChild.save();
@@ -144,14 +145,12 @@ const getStats = async (req, res) => {
     },
   ]);
 
-  res
-    .status(StatusCodes.OK)
-    .send({
-      data1: grp2,
-      data2: categoryStats,
-      completeNumber,
-      incompleteCasesNumber,
-    });
+  res.status(StatusCodes.OK).send({
+    data1: grp2,
+    data2: categoryStats,
+    completeNumber,
+    incompleteCasesNumber,
+  });
 };
 
 module.exports = {

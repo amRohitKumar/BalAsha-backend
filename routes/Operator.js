@@ -1,6 +1,9 @@
 const express = require("express");
 const router = express.Router();
 const passport = require("passport");
+const multer = require("multer");
+const { storage } = require("../cloudinary");
+const upload = multer({ storage });
 
 const {
   socialWorkerList,
@@ -8,6 +11,7 @@ const {
   updateProcessDeadline,
   markDone,
   getStats,
+  test,
 } = require("../controllers/Operator");
 
 router
@@ -16,7 +20,7 @@ router
 
 router
   .route("/getstats")
-  .get(passport.authenticate("jwt", { session: false}), getStats);
+  .get(passport.authenticate("jwt", { session: false }), getStats);
 
 router
   .route("/final/:childId")
@@ -24,7 +28,12 @@ router
 
 router
   .route("/update/:childId/:processId/:stepId")
-  .patch(passport.authenticate("jwt", { session: false }), updateChildField);
+  .patch(
+    passport.authenticate("jwt", { session: false }),
+    upload.single("documents"),
+    updateChildField
+  );
+
 
 router
   .route("/updatetime/:childId/:processId/:stepId")
