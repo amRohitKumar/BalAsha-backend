@@ -34,7 +34,7 @@ const updateChildField = async (req, res) => {
         idx2++
       ) {
         if (reqChild.process[idx1].process_list[idx2]._id == stepId) {
-          reqChild.process[idx1].process_list[idx2].url = req.file.path;
+          if(req?.file?.path) reqChild.process[idx1].process_list[idx2].url = req.file.path;
           reqChild.process[idx1].process_list[idx2].response = response;
           reqChild.process[idx1].process_list[idx2].is_completed = true;
           newDoc = await reqChild.save();
