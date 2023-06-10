@@ -7,6 +7,16 @@ const getSWforMail = async () => {
     { $unwind: "$process.process_list" },
     { $match: { "process.process_list.is_completed": false } },
     {
+      $match: {
+        $expr: {
+          $and: [
+            { $gte: ["$process.subprocess.end_date", new Date()] },
+            { $lte: ["$process.subprocess.end_date", { $add: [new Date(), 48 * 60 * 60 * 1000] }] }
+          ]
+        }
+      }
+    },
+    {
       $lookup: {
         from: "processes",
         localField: "process.process_list._process",

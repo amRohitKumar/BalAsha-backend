@@ -39,7 +39,7 @@ const getAllChild = async (req, res) => {
       );
   }
   allChilds = allChilds.map((doc) => {
-    let nextStep = "COMPLETED";
+    let nextStep = "-1";
 
     for (let subDoc of doc.process) {
       for (let pp of subDoc.process_list) {
@@ -48,7 +48,7 @@ const getAllChild = async (req, res) => {
           break;
         }
       }
-      if (nextStep) break;
+      if (nextStep !== "-1") break;
     }
     return {
       next_step: nextStep,
