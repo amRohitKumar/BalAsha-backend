@@ -89,7 +89,7 @@ const getAssignedChild = async (req, res) => {
         select: "name",
       })
       .select(
-        "_id , gender , name , category , process.process_list.is_completed"
+        "_id , gender , name , category , process.process_list.is_completed , dob"
       );
 
     allChilds = allChilds.map((doc) => {
@@ -109,6 +109,7 @@ const getAssignedChild = async (req, res) => {
         name: doc.name,
         gender: doc.gender,
         category: doc.category,
+        dob: moment().diff(doc.dob, 'years'),
         _id: doc._id,
       };
     });

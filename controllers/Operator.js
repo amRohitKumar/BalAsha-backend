@@ -100,10 +100,10 @@ const getStats = async (req, res) => {
   let grp1 = [0, 0, 0, 0],
     grp2 = [0, 0, 0, 0, 0, 0, 0, 0];
   incompleteCase.forEach((child) => {
-    let ptr = 0;
+    let ptr = (child.category==="ABANDONED"?0:4);
+    let flag = false;
     for (let idx2 = 0; idx2 < child.process.length; idx2++) {
       doc = child.process[idx2];
-      let flag = false;
       for (let idx = 0; idx < doc.process_list.length; idx++) {
         if (doc.process_list[idx].is_completed === false) {
           grp2[ptr] += 1;
