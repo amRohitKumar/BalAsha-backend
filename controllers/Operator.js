@@ -18,7 +18,6 @@ const socialWorkerList = async (req, res) => {
 const updateChildField = async (req, res) => {
   const { childId, processId, stepId } = req.params;
   const { response } = req.body;
-  console.log(response);
   const reqChild = await Child.findById(childId)
     .populate({ path: "process.process_list._process" })
     .select("process");

@@ -3,6 +3,7 @@ const Child = require("../models/Child");
 const Process = require("../models/Process");
 const Orphanage = require("../models/Orphanage");
 const fastCsv = require("fast-csv");
+const moment = require("moment");
 
 /**
  * @returns list of child based on current status
@@ -17,7 +18,7 @@ const getAllChild = async (req, res) => {
         select: "name",
       })
       .select(
-        "_id , gender , name , category , process.process_list.is_completed , is_done"
+        "_id , gender , name , category , process.process_list.is_completed , is_done , dob"
       );
   } else if (filter_string === "process") {
     allChilds = await Child.find({ is_done: false })
@@ -26,7 +27,7 @@ const getAllChild = async (req, res) => {
         select: "name",
       })
       .select(
-        "_id , gender , name , category , process.process_list.is_completed , is_done"
+        "_id , gender , name , category , process.process_list.is_completed , is_done , dob"
       );
   } else {
     allChilds = await Child.find({})
@@ -35,7 +36,7 @@ const getAllChild = async (req, res) => {
         select: "name",
       })
       .select(
-        "_id , gender , name , category , process.process_list.is_completed , is_done"
+        "_id , gender , name , category , process.process_list.is_completed , is_done , dob"
       );
   }
   allChilds = allChilds.map((doc) => {
@@ -59,6 +60,7 @@ const getAllChild = async (req, res) => {
       name: doc.name,
       gender: doc.gender,
       category: doc.category,
+      dob: moment().diff(doc.dob, 'years'),
       _id: doc._id,
     };
   });
@@ -195,14 +197,18 @@ const getCompleteChildDetails = async (req, res) => {
   }
   // get all the files
   const fileLinks = [];
+  const details = {};
   reqChild.process.forEach((doc) => {
+    const curr = {};
     doc.process_list.forEach((subDoc) => {
       if (subDoc.url)
         fileLinks.push({ name: subDoc._process.name, url: subDoc.url });
+      curr[subDoc._process.name] = subDoc.response;
     });
+    details[doc.name] = curr;
   });
-
-  return res.status(StatusCodes.OK).send({ data: reqChild, links: fileLinks });
+  
+  return res.status(StatusCodes.OK).send({ data: reqChild, links: fileLinks, details });
 };
 
 /**
@@ -211,7 +217,6 @@ const getCompleteChildDetails = async (req, res) => {
 const createChild = async (req, res) => {
   const {
     name,
-    image_url,
     dob,
     orphanage_name,
     city,
@@ -366,7 +371,7 @@ const createChild = async (req, res) => {
 
   const newChild = new Child({
     name,
-    image_url,
+    image_url: req?.file?.path,
     dob,
     shelter_home,
     gender,

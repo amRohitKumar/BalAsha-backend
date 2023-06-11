@@ -1,6 +1,9 @@
 const express = require("express");
 const passport = require("passport");
 const router = express.Router();
+const multer = require("multer");
+const { storage } = require("../cloudinary");
+const upload = multer({ storage });
 
 const {
   getAllChild,
@@ -8,7 +11,7 @@ const {
   getChildDetails,
   createChild,
   getCompleteChildDetails,
-  generateChildCSV
+  generateChildCSV,
 } = require("../controllers/Child");
 
 router
@@ -21,15 +24,22 @@ router
 
 router
   .route("/add")
-  .post(passport.authenticate("jwt", { session: false }), createChild);
+  .post(
+    passport.authenticate("jwt", { session: false }),
+    upload.single("image_url"),
+    createChild
+  );
 
 router
   .route("/complete/:id")
-  .get(passport.authenticate("jwt", { session: false }), getCompleteChildDetails);
+  .get(
+    passport.authenticate("jwt", { session: false }),
+    getCompleteChildDetails
+  );
 
 router
   .route("/getcsv")
-  .get(passport.authenticate("jwt", {session: false}), generateChildCSV);
+  .get(passport.authenticate("jwt", { session: false }), generateChildCSV);
 
 router
   .route("/:id")
